@@ -1,0 +1,276 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+arc-preloader-hero.tsx
+"use client";
+
+import * as React from "react";
+import {
+  animate,
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "motion/react";
+import { cn } from "@/lib/utils";
+
+/* ── types ───────────────────────────────────────────────────── */
+
+export type ArcRevealGreeting = {
+  /** Greeting text in the target script */
+  text: string;
+  /** Optional `lang` attribute applied to the span (helps screen readers / font rendering) */
+  lang?: string;
+};
+
+export interface ArcRevealHeroProps {
+  /** Greetings cycled before the arc reveal. */
+  greetings?: ArcRevealGreeting[];
+  /** How long each greeting is held on screen (ms). */
+  greetingHold?: number;
+  /** Duration of the curved curtain reveal (ms). */
+  revealDuration?: number;
+  /** Outer `<section>` class. Receives the *post-reveal* surface. */
+  className?: string;
+  /** Class for the intro (pre-reveal) overlay surface. */
+  introClassName?: string;
+  /** Class for the cycled greeting `<span>`. */
+  greetingClassName?: string;
+  /** Class for the wrapper around `children` (the revealed content). */
+  revealClassName?: string;
+  /**
+   * Optional `sessionStorage` key — when set, the intro plays only once per
+   * session for the same key. Leave unset to replay on every mount.
+   */
+  storageKey?: string;
+  /** Content shown after the curtain reveal (the "landing"). */
+  children?: React.ReactNode;
+}
+
+/* ── defaults ────────────────────────────────────────────────── */
+
+const DEFAULT_GREETINGS: ArcRevealGreeting[] = [
+  { text: "Quiet." },
+  { text: "Sharp." },
+  { text: "Calm." },
+  { text: "Crafted." },
+  { text: "Considered." },
+  { text: "Composed." },
+  { text: "Honest." },
+  { text: "Ready." },
+];
+
+type Phase = "intro" | "reveal" | "done";
+
+/* ── component ───────────────────────────────────────────────── */
+
+export function ArcRevealHero({
+  greetings = DEFAULT_GREETINGS,
+  greetingHold = 620,
+  revealDuration = 1500,
+  className,
+  introClassName,
+  greetingClassName,
+  revealClassName,
+  storageKey,
+  children,
+}: ArcRevealHeroProps) {
+  const prefersReducedMotion = useReducedMotion();
+
+  const [phase, setPhase] = React.useState<Phase>("intro");
+  const [index, setIndex] = React.useState(0);
+
+  // Drive the arc shape from a single 0→1 progress.
+  // The curve is a quadratic bezier with a fixed concavity (control point
+  // sits 25 viewBox units below the chord), translated upward over time:
+  //   t=0 → chord at y=110 (off-screen below)  → no curtain visible
+  //   t=1 → chord at y=-30 (off-screen above)  → full-screen curtain
+  const progress = useMotionValue(0);
+  const arcPath = useTransform(progress, (p: number) => {
+    const edge = 110 - p * 140;
+    const control = edge + 25;
+    return `M 0 ${edge} Q 50 ${control} 100 ${edge} L 100 110 L 0 110 Z`;
+  });
+
+  // Honor reduced-motion + replay-suppression on mount.
+  React.useEffect(() => {
+    if (prefersReducedMotion) {
+      setPhase("done");
+      return;
+    }
+    if (storageKey && typeof window !== "undefined") {
+      try {
+        if (window.sessionStorage.getItem(storageKey) === "done") {
+          setPhase("done");
+        }
+      } catch {
+        /* sessionStorage can throw in private mode — fall through */
+      }
+    }
+  }, [prefersReducedMotion, storageKey]);
+
+  // Greeting cycle.
+  React.useEffect(() => {
+    if (phase !== "intro") return;
+    const isLast = index >= greetings.length - 1;
+    if (isLast) {
+      const t = window.setTimeout(() => setPhase("reveal"), greetingHold + 220);
+      return () => window.clearTimeout(t);
+    }
+    const t = window.setTimeout(() => setIndex((i) => i + 1), greetingHold);
+    return () => window.clearTimeout(t);
+  }, [phase, index, greetingHold, greetings.length]);
+
+  // Drive the curtain reveal.
+  React.useEffect(() => {
+    if (phase !== "reveal") return;
+    const controls = animate(progress, 1, {
+      duration: revealDuration / 1000,
+      ease: [0.85, 0, 0.15, 1],
+      onComplete: () => {
+        if (storageKey && typeof window !== "undefined") {
+          try {
+            window.sessionStorage.setItem(storageKey, "done");
+          } catch {
+            /* ignore */
+          }
+        }
+        setPhase("done");
+      },
+    });
+    return () => controls.stop();
+  }, [phase, progress, revealDuration, storageKey]);
+
+  const showOverlay = phase !== "done";
+  const current = greetings[Math.min(index, greetings.length - 1)];
+
+  return (
+    <section
+      aria-label="Hero"
+      className={cn(
+        "relative isolate min-h-screen w-full overflow-hidden bg-background text-foreground",
+        className,
+      )}
+    >
+      <div className={cn("relative z-0", revealClassName)}>{children}</div>
+
+      <AnimatePresence>
+        {showOverlay && (
+          <motion.div
+            key="arc-reveal-overlay"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+            className={cn(
+              "absolute inset-x-0 top-0 z-30 h-screen overflow-hidden bg-foreground",
+              introClassName,
+            )}
+          >
+            {/* Cycled greeting */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                {phase === "intro" && current && (
+                  <motion.span
+                    key={`${index}-${current.text}`}
+                    lang={current.lang}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                    className={cn(
+                      "select-none px-6 text-center text-5xl font-semibold tracking-tight text-background sm:text-6xl md:text-7xl",
+                      greetingClassName,
+                    )}
+                  >
+                    {current.text}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Rising curved curtain */}
+            <svg
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden
+            >
+              <motion.path d={arcPath} style={{ fill: "var(--background)" }} />
+            </svg>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
+export default ArcRevealHero;
+
+
+demo.tsx
+import { ArcRevealHero } from "@/components/ui/arc-preloader-hero";
+
+export default function DemoOne() {
+return (
+    <ArcRevealHero>
+      <div className="flex min-h-screen w-full flex-col items-center justify-center gap-5 px-6 text-center">
+        <h1 className="max-w-2xl text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl">
+          First we listen. Then we ship.
+        </h1>
+        <p className="max-w-md text-balance text-base text-muted-foreground md:text-lg">
+          A studio for teams who want the quiet kind of software — considered,
+          fast, and built to last.
+        </p>
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          >
+            Start a project
+          </button>
+          <button
+            type="button"
+            className="rounded-full px-5 py-2.5 text-sm font-medium text-foreground ring-1 ring-border transition-colors hover:bg-muted"
+          >
+            See our work
+          </button>
+        </div>
+      </div>
+    </ArcRevealHero>
+  );
+}
+
+```
+
+Install NPM dependencies:
+```bash
+motion
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them
