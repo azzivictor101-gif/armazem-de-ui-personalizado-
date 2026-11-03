@@ -1,0 +1,267 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+notched-project-card.tsx
+"use client";
+
+import * as React from "react";
+import { ArrowUpRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+/**
+ * NotchedProjectCard
+ *
+ * A project card whose cover has a rounded notch bitten out of its
+ * bottom-right corner, with the "open" arrow nested inside it. The cut is
+ * concentric with the arrow disc, and filleted where it meets the cover's
+ * edges, so the cover curves into it instead of ending on a point.
+ *
+ * The notch is drawn by three layers painted in the colour of the surface
+ * BEHIND the card (`surface`, the page background by default). Put the card
+ * on a different background and pass that colour, or the notch shows.
+ *
+ * Optional extras:
+ * - `screen`: a product screen layered over the cover photo. The photo holds
+ *   still and the screen grows on hover, so the card gains depth instead of
+ *   just zooming.
+ * - `monochrome`: the cover sits in black and white and takes its colours
+ *   back on hover or keyboard focus.
+ */
+
+export interface NotchedProjectCardProps {
+  href: string;
+  title: string;
+  description?: string;
+  /** cover photograph */
+  image: string;
+  imageAlt?: string;
+  /** a pill at the top of the cover, e.g. the year */
+  badge?: string;
+  tags?: string[];
+  /** a product screen over the photo (transparent PNG/WebP works best) */
+  screen?: { src: string; alt: string; className?: string };
+  /** a dark wash between the photo and the screen, 0 to 1 */
+  dim?: number;
+  monochrome?: boolean;
+  /** the colour behind the card; the notch is painted in it */
+  surface?: string;
+  /** the arrow disc's fill on hover (any CSS colour); defaults to the theme's primary */
+  accent?: string;
+  /** the arrow's colour on that fill; pick one that contrasts with `accent` */
+  accentForeground?: string;
+  className?: string;
+}
+
+const DISC = 64; // the arrow disc, px
+const BLOCK = 80; // the notch block, px (radius = BLOCK - DISC / 2)
+const FILLET = 28; // the curve where the cut meets the cover's edges, px
+
+export function NotchedProjectCard({
+  href,
+  title,
+  description,
+  image,
+  imageAlt = "",
+  badge,
+  tags = [],
+  screen,
+  dim = screen ? 0.45 : 0,
+  monochrome = false,
+  surface = "var(--color-background)",
+  accent,
+  accentForeground = "#0a0a0a",
+  className,
+}: NotchedProjectCardProps) {
+  const tone = monochrome
+    ? "grayscale transition-[filter,scale] duration-500 group-hover:grayscale-0 group-focus-visible:grayscale-0"
+    : "transition-[scale] duration-500";
+
+  return (
+    <a
+      href={href}
+      className={cn(
+        "group flex flex-col rounded-[28px] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background",
+        className,
+      )}
+    >
+      <div className="relative">
+        {/* the cover */}
+        <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-muted">
+          <img
+            src={image}
+            alt={screen ? "" : imageAlt}
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover",
+              tone,
+              !screen && "group-hover:scale-[1.04]",
+            )}
+          />
+          {dim > 0 && (
+            <div aria-hidden className="absolute inset-0" style={{ backgroundColor: `rgb(0 0 0 / ${dim})` }} />
+          )}
+          {screen && (
+            <img
+              src={screen.src}
+              alt={screen.alt}
+              className={cn(
+                "absolute bottom-0 right-0 w-[82%] origin-bottom-right drop-shadow-[0_18px_40px_rgba(0,0,0,0.5)] group-hover:scale-[1.07]",
+                tone,
+                screen.className,
+              )}
+            />
+          )}
+          {badge && (
+            <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center pt-4">
+              <span className="rounded-full border border-white/40 bg-black/30 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md">
+                {badge}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* the notch: a block with a concave corner, and a fillet at each
+            end where the cut meets the cover's right and bottom edges */}
+        <div
+          aria-hidden
+          className="absolute bottom-0 right-0"
+          style={{ width: BLOCK, height: BLOCK, borderTopLeftRadius: BLOCK - DISC / 2, background: surface }}
+        />
+        {[
+          { bottom: BLOCK, right: 0 },
+          { bottom: 0, right: BLOCK },
+        ].map((pos, i) => (
+          <div
+            key={i}
+            aria-hidden
+            className="absolute"
+            style={{
+              ...pos,
+              width: FILLET,
+              height: FILLET,
+              background: `radial-gradient(circle at top left, transparent ${FILLET - 0.5}px, ${surface} ${FILLET}px)`,
+            }}
+          />
+        ))}
+
+        {/* the arrow, nested in the notch */}
+        <span
+          aria-hidden
+          className={cn(
+            "absolute bottom-0 right-0 flex items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-[background-color,color,scale] duration-300 group-hover:scale-105",
+            accent
+              ? "group-hover:bg-[var(--card-accent)] group-hover:text-[var(--card-accent-fg)]"
+              : "group-hover:bg-primary group-hover:text-primary-foreground",
+          )}
+          style={
+            {
+              width: DISC,
+              height: DISC,
+              "--card-accent": accent,
+              "--card-accent-fg": accentForeground,
+            } as React.CSSProperties
+          }
+        >
+          <ArrowUpRight className="size-5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        </span>
+      </div>
+
+      <h3 className="mt-5 text-2xl font-medium tracking-tight text-foreground">{title}</h3>
+      {description && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>}
+      {tags.length > 0 && (
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {tags.map((t, i) => (
+            <li
+              key={`${t}-${i}`}
+              className="rounded-md bg-secondary px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-secondary-foreground"
+            >
+              {t}
+            </li>
+          ))}
+        </ul>
+      )}
+    </a>
+  );
+}
+
+export default NotchedProjectCard;
+
+
+demo.tsx
+import { NotchedProjectCard } from "@/components/ui/notched-project-card";
+
+/* Three cards, one per device (desktop, phone, tablet), and three
+   confessions from a designer who would rather not build her own cards. */
+
+export default function Demo() {
+  return (
+    <div className="grid w-full max-w-6xl gap-x-5 gap-y-12 p-6 min-[700px]:grid-cols-3 lg:gap-x-8 lg:p-8">
+      {/* desktop: the window runs off the bottom-right corner */}
+      <NotchedProjectCard
+        href="#"
+        title="Ctrl+C, Ctrl+V, Ship"
+        description="A landing page built in the time it took my coffee to cool. Searched 21st.dev, found a card, pasted it. Nobody needs to know."
+        image="https://cdn.21st.dev/assets/mirror/c5/c5c57791868384517fc58d770bd31ef697db8f20d82c2472fcdfbca4746cd9c9.jpg"
+        badge="2026"
+        tags={["Copy-paste", "Speedrun"]}
+        monochrome
+        accent="#DA8956"
+      />
+      {/* phone: rises out of the bottom edge, its foot cropped */}
+      <NotchedProjectCard
+        href="#"
+        title="The Button I Didn't Design"
+        description="Three weeks agonising over a border radius. Then I found one on 21st.dev that was already perfect. Therapy is expensive, components are free."
+        image="https://cdn.21st.dev/assets/mirror/41/419cedf31b174aecd64085fa834ce51a307f65ab5245408c5fe988c3f8c42eb5.jpg"
+        badge="2025"
+        tags={["Self-care", "Zero effort"]}
+        monochrome
+        accent="#DA8956"
+      />
+      {/* tablet: stands in the bottom-right corner, running off both edges */}
+      <NotchedProjectCard
+        href="#"
+        title="Dashboard, Eventually"
+        description="Planned to build it from scratch this weekend. Installed it from 21st.dev in one command instead, then took a well-deserved nap."
+        image="https://cdn.21st.dev/assets/mirror/da/da6e06827db10c0af8f419f8eca7041264c487235b31f8302cced094c16e657a.jpg"
+        badge="2024"
+        tags={["Nap-driven", "With AI"]}
+        monochrome
+        accent="#DA8956"
+      />
+    </div>
+  );
+}
+
+```
+
+Install NPM dependencies:
+```bash
+lucide-react
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them
