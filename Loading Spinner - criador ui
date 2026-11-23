@@ -1,0 +1,390 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+spinner.tsx
+"use client";
+
+import { useEffect, useMemo } from "react";
+import Circle from "./spinner-utils/circle";
+import Dots from "./spinner-utils/dots";
+import Pulse from "./spinner-utils/pulse";
+import Bars from "./spinner-utils/bars";
+import Ring from "./spinner-utils/ring";
+import Orbit from "./spinner-utils/orbit";
+import PulseDots from "./spinner-utils/pulse-dots";
+import OrbitDots from "./spinner-utils/orbit-dots";
+import Arc from "./spinner-utils/arc";
+import type {
+  SpinnerProps,
+  SpinnerVariantName,
+} from "./spinner-utils/spinner-types";
+import { usePrefersReducedMotion } from "./spinner-utils/use-prefers-reduced-motion";
+import { clampProgress, progressA11y } from "./spinner-utils/progress";
+import { useLoadingConfig } from "./spinner-utils/use-loading-config";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const variants: Record<SpinnerVariantName, (props: any) => JSX.Element> = {
+  circle: Circle,
+  dots: Dots,
+  pulse: Pulse,
+  bars: Bars,
+  ring: Ring,
+  orbit: Orbit,
+  "pulse-dots": PulseDots,
+  "orbit-dots": OrbitDots,
+  arc: Arc,
+};
+
+/** Prop names each variant declares. The Vue source introspects each
+ *  variant's declared `props` at runtime to decide what to forward and
+ *  whether `value` is supported; React components don't expose that
+ *  metadata, so the same mapping is kept here explicitly. */
+const ACCEPTED_PROPS: Record<SpinnerVariantName, string[]> = {
+  circle: ["size", "color", "speed", "thickness", "track"],
+  dots: ["size", "color", "speed"],
+  pulse: ["size", "color", "speed"],
+  bars: ["size", "color", "speed"],
+  ring: ["size", "color", "speed", "thickness", "track"],
+  orbit: ["size", "color", "speed"],
+  "pulse-dots": ["size", "color", "speed"],
+  "orbit-dots": ["size", "color", "speed"],
+  arc: ["size", "color", "speed", "thickness", "track", "value"],
+};
+
+/* A spinner that stops entirely reads as a frozen page, so reduced
+   motion slows it down instead of disabling it (unlike Skeleton). */
+const REDUCED_MOTION_SPEED_FACTOR = 0.5;
+
+/**
+ * Port of vue-smart-loading-kit's `<Spinner>` to React.
+ * Original source: https://github.com/navidjaberi/vue-smart-loading-kit
+ * (MIT License, Copyright (c) 2026 Navid Jaberi)
+ */
+export default function Spinner(props: SpinnerProps) {
+  /* explicit prop > global config > built-in default */
+  const config = useLoadingConfig();
+  const conf = config.spinner ?? {};
+
+  const size = props.size ?? conf.size ?? 40;
+  const color = props.color ?? conf.color ?? "currentColor";
+  const speed = props.speed ?? conf.speed ?? 1;
+  const thickness = props.thickness ?? conf.thickness ?? 4;
+  const track = props.track ?? conf.track;
+
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const effectiveSpeed = prefersReducedMotion
+    ? speed * REDUCED_MOTION_SPEED_FACTOR
+    : speed;
+
+  /** `variant` wins over the deprecated `type`; camelCase names are
+   *  normalized to kebab-case so both v0.1.0 spellings keep working. */
+  const variantName = useMemo((): SpinnerVariantName => {
+    const raw = props.variant ?? props.type ?? conf.variant ?? "circle";
+    return raw.replace(
+      /[A-Z]/g,
+      (c) => `-${c.toLowerCase()}`,
+    ) as SpinnerVariantName;
+  }, [props.variant, props.type, conf.variant]);
+
+  const Component = variants[variantName] ?? Circle;
+  const accepted = ACCEPTED_PROPS[variantName] ?? ACCEPTED_PROPS.circle;
+
+  /* Pass each variant only the props it declares: anything else (e.g.
+     `thickness` on dots) would render as a stray HTML attribute. Undefined
+     values are dropped so the variant's own defaults apply. */
+  const variantProps = useMemo(() => {
+    const all: Record<string, unknown> = {
+      size,
+      color,
+      speed: effectiveSpeed,
+      thickness,
+      track,
+      value: props.value,
+    };
+    return Object.fromEntries(
+      Object.entries(all).filter(
+        ([k, v]) => v !== undefined && accepted.includes(k),
+      ),
+    );
+  }, [size, color, effectiveSpeed, thickness, track, props.value, accepted]);
+
+  const progress = accepted.includes("value")
+    ? clampProgress(props.value)
+    : null;
+
+  useEffect(() => {
+    if (props.value != null && !accepted.includes("value")) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[vue-smart-loading-kit] Spinner `value` is ignored by variant "${variantName}". ` +
+          `To show progress, use variant="arc" or <ProgressBar>.`,
+      );
+    }
+  }, [props.value, variantName, accepted]);
+
+  const a11y = progressA11y(props.label, progress);
+
+  return (
+    <span className="vslk-spinner-wrapper" {...a11y}>
+      <Component {...variantProps} />
+      {props.label && progress === null ? (
+        <span className="vslk-sr-only">{props.label}</span>
+      ) : null}
+    </span>
+  );
+}
+
+
+demo.tsx
+import Spinner from "@/components/ui/spinner";
+
+export default function SpinnerDemo() {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-10 p-10 text-neutral-800 dark:text-neutral-200">
+      <Spinner variant="circle" />
+      <Spinner variant="dots" />
+      <Spinner variant="pulse" />
+      <Spinner variant="bars" />
+      <Spinner variant="ring" />
+      <Spinner variant="orbit" />
+      <Spinner variant="pulse-dots" />
+      <Spinner variant="orbit-dots" />
+      <Spinner variant="arc" />
+    </div>
+  );
+}
+
+```
+
+Copy-paste these files for dependencies:
+```tsx
+shadcn/progress
+"use client"
+
+import * as React from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
+
+import { cn } from "@/lib/utils"
+
+const Progress = React.forwardRef<
+  React.ElementRef<typeof ProgressPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
+>(({ className, value, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
+      className,
+    )}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className="h-full w-full flex-1 bg-primary transition-all"
+      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+    />
+  </ProgressPrimitive.Root>
+))
+Progress.displayName = ProgressPrimitive.Root.displayName
+
+export { Progress }
+
+```
+
+Install NPM dependencies:
+```bash
+@radix-ui/react-progress
+```
+
+Extend existing Tailwind 4 index.css with this code (or if project uses Tailwind 3, extend tailwind.config.js or globals.css):
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+
+
+@keyframes vslk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vslk-arc-rotate {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+@keyframes vslk-arc-dash {
+  0% {
+    stroke-dasharray: 1 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 70 150;
+    stroke-dashoffset: -28;
+  }
+  100% {
+    stroke-dasharray: 70 150;
+    stroke-dashoffset: -99;
+  }
+}
+
+@keyframes vslk-bars {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes vslk-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes vslk-orbit-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vslk-orbit-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(calc(var(--vslk-radius) * -1))
+      scale(0.8);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(calc(var(--vslk-radius) * -1))
+      scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes vslk-orbit-dots-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vslk-orbit-dots-pulse {
+  0%,
+  100% {
+    transform: translate(
+        -50%,
+        calc(-50% + (var(--inward-offset) * 0) )
+      )
+      scale(0.7);
+    opacity: 0.45;
+  }
+  35% {
+    transform: translate(
+        -50%,
+        calc(-50% + var(--inward-offset))
+      )
+      scale(1.4);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-50%, calc(-50% + var(--inward-offset))) scale(1.4);
+    opacity: 1;
+  }
+}
+
+@keyframes vslk-pulse-core {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes vslk-pulse-wave {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  70%,
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes vslk-pulse-orbit-pulse {
+  0% {
+    transform: translateY(-25%) scale(0.7);
+    opacity: 0.5;
+  }
+  35% {
+    transform: translateY(10%) scale(1.35);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(10%) scale(1.35);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-25%) scale(0.7);
+    opacity: 0.5;
+  }
+}
+
+@keyframes ring-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them
