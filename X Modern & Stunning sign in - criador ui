@@ -1,0 +1,255 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+x-modern-stunning-sign-in.tsx
+// This is file of your component
+// You can use any dependencies from npm; we import them automatically in package.json
+
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+
+export const Component = () => {
+  const [count, setCount] = useState(0);
+
+  return (
+    <>
+  <meta charSet="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>X — Log in (B2)</title>
+  <style
+    dangerouslySetInnerHTML={{
+      __html:
+        '
+@font-face{font-family:Chirp;font-weight:400;src:url(https://cdn.21st.dev/assets/mirror/24/247c4874cc775aad822d5e90ef36b1547d1848ea50254e980a7b02add940132f.woff) format("woff2")}
+@font-face{font-family:Chirp;font-weight:500;src:url(https://cdn.21st.dev/assets/mirror/e6/e613719b041dc5e6be85aab3b82488bb196883a4c0dbe1666f31f3ea99f654ed.woff) format("woff2")}
+@font-face{font-family:Chirp;font-weight:700;src:url(https://cdn.21st.dev/assets/mirror/d0/d07b651c0fe4feaa46ea16d44de11ff0c9e19c892ccab1101507446188d7c501.woff) format("woff2")}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+body{--lx:0;--ly:0;position:relative;min-height:100vh;color:#e7e9ea;font-family:Chirp,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+a{color:#1d9bf0;text-decoration:none}
+
+/* light + floor */
+.floor{position:absolute;inset:0;background:radial-gradient(ellipse 36% 56% at calc(50% + var(--lx) * 7%) 50%,#35373c 0%,#1d1e22 36%,#0b0b0d 64%,#000 84%);animation:fade 1.2s ease-out both}
+.beam{position:absolute;left:50%;top:-200px;width:640px;height:560px;margin-left:-320px;transform-origin:50% 100%;transform:rotate(calc(var(--lx) * 12deg));filter:blur(26px);mix-blend-mode:screen;animation:fade 1.6s .1s ease-out both}
+.beam i{position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.2),rgba(255,255,255,.07) 70%,rgba(255,255,255,0));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%)}
+.rings{position:absolute;left:50%;top:374px;width:0;height:0}
+.rings i{position:absolute;left:-150px;top:-26px;width:300px;height:52px;border-radius:50%;border:.7px solid rgba(255,255,255,.35);opacity:0;animation:ring 6s cubic-bezier(.15,.6,.3,1) infinite}
+.rings i:nth-child(2){animation-delay:2s}.rings i:nth-child(3){animation-delay:4s}
+.shadow{position:absolute;left:50%;top:332px;width:460px;height:720px;margin-left:-230px;transform-origin:50% 0;transform:skewX(calc(var(--lx) * -7deg));filter:blur(14px);animation:fade .8s .25s ease-out both}
+.shadow i{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.97),rgba(0,0,0,.93) 55%,rgba(0,0,0,.78));clip-path:polygon(19% 0,81% 0,100% 100%,0 100%)}
+#dust{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+/* the key */
+.drop{position:absolute;left:50%;top:96px;width:280px;height:280px;margin-left:-140px;animation:land .9s 0s cubic-bezier(.2,.8,.2,1) both}
+.key{position:relative;width:100%;height:100%;border-radius:66px;transform:perspective(900px) rotateY(calc(var(--lx) * 12deg)) rotateX(calc(var(--ly) * -9deg));
+  background:linear-gradient(180deg,#2b2c30 0%,#131417 42%,#060607 100%);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.62),inset 0 0 0 1px rgba(255,255,255,.06),inset 0 -12px 26px rgba(0,0,0,.75),0 34px 60px -22px rgba(0,0,0,.95);display:grid;place-items:center}
+.sheen{position:absolute;inset:0;border-radius:inherit;pointer-events:none;mix-blend-mode:screen;background:linear-gradient(115deg,transparent 36%,rgba(255,255,255,.17) 48%,rgba(255,255,255,.04) 56%,transparent 64%);background-size:260% 100%;background-position:calc(50% - var(--lx) * 60%) 0}
+.key svg{width:132px;height:132px;overflow:visible}
+.trace{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:46 454;animation:trace 5.5s linear infinite;filter:drop-shadow(0 0 6px rgba(255,255,255,.95))}
+.live{position:absolute;top:30px;right:32px;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 10px 1px rgba(255,255,255,.9)}
+.live::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(255,255,255,.75);animation:ping 2s ease-out infinite}
+
+/* copy + form inside the shadow */
+.stage{position:absolute;left:50%;top:414px;width:300px;margin-left:-150px;text-align:center}
+h1{margin:0 -80px 26px;font-size:46px;line-height:1;letter-spacing:-1.2px;font-weight:700;color:#fff;white-space:nowrap}
+h1 .c{display:inline-block;animation:char .65s cubic-bezier(.2,.8,.2,1) both}
+.nointro .floor,.nointro .beam,.nointro .shadow,.nointro .drop,.nointro .rise,.nointro h1 .c{animation:none}
+.rise{animation:rise .8s cubic-bezier(.2,.8,.2,1) both}
+.btn{position:relative;overflow:hidden;width:100%;height:40px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;border:1px solid #536471;background:rgba(0,0,0,.35);color:#e7e9ea;font-size:15px;font-weight:700;transition:border-color .25s,background .25s}
+.btn:hover{border-color:#8b98a5;background:rgba(231,233,234,.06)}
+.btn::after,.cont::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;transform:skewX(-20deg);background:linear-gradient(100deg,transparent,rgba(255,255,255,.2),transparent)}
+.btn::after{transition:left .7s cubic-bezier(.2,.8,.2,1)}
+.btn:hover::after{left:130%}
+.btn svg{width:18px;height:18px;flex:none}
+.or{display:flex;align-items:center;gap:10px;margin:10px 0 14px;font-size:15px;color:#e7e9ea}
+.or i{flex:1;height:1px;background:#2f3336}
+.field{display:flex;align-items:center;height:54px;padding:0 14px;margin-bottom:12px;border:1px solid #333639;border-radius:4px;background:rgba(0,0,0,.45);font-size:17px;color:#71767b;transition:border-color .25s}
+.field:hover{border-color:#536471}
+.cont{position:relative;overflow:hidden;width:100%;height:44px;border:0;border-radius:9999px;background:#eff3f4;color:#0f1419;font-size:15px;font-weight:700}
+.cont::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,.95),transparent);mix-blend-mode:soft-light;animation:shine 4s 2.4s ease-in-out infinite}
+.terms{margin:18px 0 0;font-size:13px;line-height:16px;color:#71767b}
+
+/* film */
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 80% at 50% 45%,transparent 55%,rgba(0,0,0,.75) 100%)}
+.grain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.07;mix-blend-mode:overlay}
+
+@keyframes fade{from{opacity:0}}
+@keyframes land{from{opacity:0;transform:translateY(-44px) scale(.94);filter:blur(12px)}}
+@keyframes char{from{opacity:0;transform:translateY(16px);filter:blur(10px)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+@keyframes trace{to{stroke-dashoffset:-1000}}
+@keyframes ping{0%{transform:scale(.6);opacity:1}100%{transform:scale(2.6);opacity:0}}
+@keyframes ring{0%{transform:scale(1);opacity:0}8%{opacity:.9}100%{transform:scale(4.8);opacity:0}}
+@keyframes shine{0%,55%{left:-60%}100%{left:130%}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+'
+    }}
+  />
+  <div className="floor" />
+  <div className="beam">
+    <i />
+  </div>
+  <div className="rings">
+    <i />
+    <i />
+    <i />
+  </div>
+  <canvas id="dust" />
+  <div className="shadow">
+    <i />
+  </div>
+  <div className="drop">
+    <div className="key">
+      <svg viewBox="0 0 480 490" aria-label="X">
+        <defs>
+          <linearGradient
+            id="face"
+            x1={0}
+            y1={0}
+            x2={0}
+            y2={490}
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#ffffff" />
+            <stop offset={1} stopColor="#b9bcc1" />
+          </linearGradient>
+          <path
+            id="xp"
+            pathLength={1000}
+            d="M285.38 207.711L462.954 1.5H420.874L266.687 180.55L143.538 1.5H1.50003L187.726 272.256L1.50003 488.5H43.5818L206.408 299.417L336.462 488.5H478.5L285.37 207.711H285.38ZM227.743 274.641L208.875 247.68L58.7444 33.147H123.379L244.536 206.282L263.405 233.243L420.894 458.292H356.259L227.743 274.652V274.641Z"
+          />
+        </defs>
+        <use href="#xp" fill="url(#face)" />
+        <use href="#xp" className="trace" />
+      </svg>
+      <span className="live" aria-hidden="true" />
+      <span className="sheen" />
+    </div>
+  </div>
+  <main className="stage">
+    <h1>Happening now.</h1>
+    <button
+      className="btn rise"
+      style={{ animationDelay: "1.05s" }}
+      type="button"
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 6.42A3.4 3.4 0 0 1 6.42 3h3.2l2.6 5.2-1.53 1.52a7 7 0 0 0 3.58 3.59l1.53-1.53 5.2 2.6v3.2A3.4 3.4 0 0 1 17.58 21 14.6 14.6 0 0 1 3 6.42m2 0C5 13.37 10.63 19 17.58 19c.78 0 1.42-.64 1.42-1.42v-1.96l-2.8-1.4-1 .99-.46.46-.61-.24a9.3 9.3 0 0 1-5.56-5.56l-.24-.61.46-.47 1-.99L8.38 5H6.41C5.64 5 5 5.64 5 6.42" />
+      </svg>
+      Continue with phone
+    </button>
+    <button
+      className="btn rise"
+      style={{ animationDelay: "1.13s" }}
+      type="button"
+    >
+      <svg viewBox="0 0 24 24">
+        <path
+          fill="#4285f4"
+          d="M22.56 12.25q0-1.17-.2-2.25H12v4.26h5.92a5 5 0 0 1-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09"
+        />
+        <path
+          fill="#34a853"
+          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77A6.6 6.6 0 0 1 12 18.63a6.6 6.6 0 0 1-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23"
+        />
+        <path
+          fill="#fbbc05"
+          d="M5.84 14.09a6.6 6.6 0 0 1 0-4.18V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22z"
+        />
+        <path
+          fill="#ea4335"
+          d="M12 5.38a6 6 0 0 1 4.21 1.64l3.15-3.15A10.6 10.6 0 0 0 12 1C7.7 1 3.99 3.47 2.18 7.07l3.66 2.84A6.6 6.6 0 0 1 12 5.38"
+        />
+      </svg>
+      Continue with Google
+    </button>
+    <button
+      className="btn rise"
+      style={{ animationDelay: "1.21s" }}
+      type="button"
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M16.36 1.43c0 1.14-.49 2.27-1.17 3.08a4.3 4.3 0 0 1-2.99 1.57q-.27 0-.53-.06c0-.18-.04-.56-.04-.95A4.9 4.9 0 0 1 16.08.41q.06.33.06.68zm4.57 16.71c-.03.07-.46 1.58-1.52 3.12-.94 1.34-1.94 2.71-3.43 2.71-1.52 0-1.9-.88-3.63-.88-1.7 0-2.3.91-3.67.91s-2.33-1.26-3.43-2.8a13.4 13.4 0 0 1-2.32-7.28c0-4.28 2.8-6.55 5.55-6.55 1.45 0 2.68.95 3.6.95.87 0 2.23-1.01 3.9-1.01.62 0 2.9.06 4.38 2.19-.13.09-2.38 1.37-2.38 4.19a4.8 4.8 0 0 0 2.95 4.45" />
+      </svg>
+      Continue with Apple
+    </button>
+    <div className="or rise" style={{ animationDelay: "1.29s" }}>
+      <i />
+      or
+      <i />
+    </div>
+    <label className="field rise" style={{ animationDelay: "1.37s" }}>
+      Email or username
+    </label>
+    <button
+      className="cont rise"
+      style={{ animationDelay: "1.45s" }}
+      type="button"
+    >
+      Continue
+    </button>
+    <p className="terms rise" style={{ animationDelay: "1.53s" }}>
+      By continuing, you agree to our <a href="#">Terms of Service</a>,{" "}
+      <a href="#">Privacy Policy</a> and <a href="#">Cookie Use</a>.
+    </p>
+  </main>
+  <div className="vig" />
+  <svg className="grain" aria-hidden="true">
+    <filter id="n">
+      <feTurbulence
+        type="fractalNoise"
+        baseFrequency=".85"
+        numOctaves={2}
+        stitchTiles="stitch"
+      />
+    </filter>
+    <rect width="100%" height="100%" filter="url(#n)" />
+  </svg>
+</>
+
+  );
+};
+
+
+demo.tsx
+// This is a file with a demo for your component
+// That's what users will see in the preview
+// Create new files in this directory to add more demos
+
+import { Component } from "@/components/ui/x-modern-stunning-sign-in";
+
+// ONLY DEFAULT EXPORT WILL BE TREATED AS A DEMO
+export default function DemoOne() {
+  return <Component />;
+}
+
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them
