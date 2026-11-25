@@ -1,0 +1,289 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+services-02.tsx
+"use client";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@iconify/react";
+import { cn } from "@/lib/utils";
+
+export interface ServiceItem {
+  heading: string;
+  descp: string;
+  image: string;
+}
+
+export interface ServicesProps {
+  data?: ServiceItem[];
+}
+
+export const servicesData: ServiceItem[] = [
+  {
+    heading: "Brand Strategy",
+    descp:
+      "We craft unique brand stories and visual identities that resonate with your audience and build long-lasting trust and recognition.",
+    image: "https://cdn.21st.dev/assets/mirror/01/01f07009019e5463975090364d44c19dcf7ef13cef67af4719b683f7cb91ca38.png",
+  },
+  {
+    heading: "Web development",
+    descp:
+      "Build stunning, user-friendly websites that not only look great but also perform seamlessly across all devices.",
+    image: "https://cdn.21st.dev/assets/mirror/be/be88263d1fd0fb1212e1a568304f74914232c16ab748470665148034ad15db7e.png",
+  },
+  {
+    heading: "Content creation",
+    descp:
+      "We create engaging, high-quality content that resonates with your audience and helps you connect with them on a deeper level.",
+    image: "https://cdn.21st.dev/assets/mirror/b8/b8fc482a197f70c15cbabba4555a654a18be99a810f9e98fdff7105dca7edce9.png",
+  },
+  {
+    heading: "Motion graphics",
+    descp:
+      "We create engaging, high-quality motion graphics that capture the essence of your brand and help you connect with your audience on a deeper level.",
+    image: "https://cdn.21st.dev/assets/mirror/ee/eeef76369d2a2e31b850ede3480539b6f7529be057a6c471e1a21850f27cd340.png",
+  },
+];
+
+function Services({ data = servicesData }: ServicesProps) {
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+
+  const handleMouseEnter = (index: number) => {
+    setActiveIndex(index);
+  };
+
+  return (
+    <section className="bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 lg:py-20 sm:py-16 py-8">
+        <div className="flex flex-col sm:gap-16 gap-8">
+          <div className="flex md:flex-row flex-col justify-between md:items-end items-start gap-4">
+            <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-left-10 duration-1000 delay-200 ease-in-out fill-mode-both">
+              <Badge
+                variant="outline"
+                className="py-1 px-3 h-auto text-sm font-normal border-0 outline outline-border"
+              >
+                Services
+              </Badge>
+              <h2 className="sm:text-5xl text-3xl text-foreground font-semibold">
+                What we do
+              </h2>
+              <p className="max-w-2xl text-muted-foreground sm:text-lg text-base">
+                A glimpse into our creativity—exploring innovative designs,
+                successful collaborations, and transformative digital
+                experiences.
+              </p>
+            </div>
+            <Button
+              className={
+                "group p-1 bg-primary hover:bg-primary/80 text-white font-medium flex gap-2 lg:gap-3 justify-between items-center rounded-full w-fit ps-5 h-auto border-0 animate-in fade-in slide-in-from-right-10 duration-1000 delay-200 ease-in-out fill-mode-both"
+              }
+            >
+              <a
+                href="#"
+                className="flex items-center gap-3 text-primary-foreground text-sm font-medium"
+              >
+                Let's Collaborate
+                <div className="p-2 bg-background rounded-full group-hover:rotate-45 transition-transform duration-300 ease-in-out">
+                  <Icon
+                    className="text-foreground"
+                    icon="lucide:arrow-up-right"
+                    width={16}
+                    height={16}
+                  />
+                </div>
+              </a>
+            </Button>
+          </div>
+          <div className="grid grid-cols-12 relative gap-6 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-200 ease-in-out fill-mode-both">
+            <div className="w-full lg:col-span-4 col-span-12 flex items-center justify-center">
+              <div className={`transition-all duration-300 z-10 h-80`}>
+                {data?.[activeIndex]?.image && (
+                  <img
+                    src={data[activeIndex].image}
+                    alt="Service Image"
+                    width={400}
+                    height={250}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+            </div>
+            <div className="lg:col-span-1" />
+            <div className="w-full flex flex-col gap-16 lg:col-span-7 col-span-12">
+              <div>
+                {data?.map((value, index) => (
+                  <div
+                    key={index}
+                    onMouseEnter={(e) => handleMouseEnter(index)}
+                    className="group py-6 xl:py-10 border-t border-border cursor-pointer flex xl:flex-row flex-col xl:items-center items-start justify-between xl:gap-10 gap-1 relative"
+                  >
+                    <h3
+                      className={cn(
+                        "group-hover:text-teal-400 py-1 text-2xl md:text-3xl font-semibold text-foreground max-w-2xs w-full",
+                        activeIndex === index ? "text-teal-400" : "",
+                      )}
+                    >
+                      {value.heading}
+                    </h3>
+                    {activeIndex === index && (
+                      <p className="text-muted-foreground text-base transition-all duration-300 flex-1">
+                        {value.descp}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default Services;
+
+
+demo.tsx
+import Services from "@/components/ui/services-02";
+
+export default function Default() {
+  return <Services />;
+}
+
+```
+
+Copy-paste these files for dependencies:
+```tsx
+shadcn/badge
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+)
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
+
+export { Badge, badgeVariants }
+
+```
+```tsx
+shadcn/button
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  },
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+
+```
+
+Install NPM dependencies:
+```bash
+@iconify/react, class-variance-authority, @radix-ui/react-slot
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them
