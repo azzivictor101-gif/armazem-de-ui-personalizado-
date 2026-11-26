@@ -1,0 +1,218 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+sector-wheel.tsx
+"use client"
+
+import * as React from "react"
+import { motion, AnimatePresence, useInView, useReducedMotion } from "motion/react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+function Reel({ digit, lh }: { digit: number; lh: number }) {
+  return (
+    <span className="inline-block overflow-hidden align-top" style={{ height: lh }}>
+      <motion.span className="flex flex-col" initial={false} animate={{ y: -digit * lh }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
+        {Array.from({ length: 10 }).map((_, d) => (
+          <span key={d} className="block" style={{ height: lh, lineHeight: `${lh}px` }}>
+            {d}
+          </span>
+        ))}
+      </motion.span>
+    </span>
+  )
+}
+
+function Counter({ value, size = 15 }: { value: number; size?: number }) {
+  const lh = Math.round(size * 1.2)
+  const chars = String(value).padStart(2, "0").split("")
+  return (
+    <span className="inline-flex tabular-nums" style={{ fontSize: size, height: lh }} role="img" aria-label={String(value)}>
+      <span aria-hidden className="inline-flex select-none">
+        {chars.map((c, i) => (
+          <Reel key={i} digit={Number(c)} lh={lh} />
+        ))}
+      </span>
+    </span>
+  )
+}
+
+export interface Sector {
+  name: string
+  note: string
+}
+
+export interface SectorWheelProps {
+  title?: string
+  sectors: Sector[]
+  interval?: number
+  className?: string
+}
+
+const ROW = 84
+
+export function SectorWheel({ title = "Know-how across thirteen industries", sectors, interval = 2600, className }: SectorWheelProps) {
+  const [i, setI] = React.useState(0)
+  const [hold, setHold] = React.useState(false)
+  const ref = React.useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { amount: 0.4 })
+  const reduce = useReducedMotion()
+  const n = sectors.length
+
+  React.useEffect(() => {
+    if (!interval || hold || !inView || reduce) return
+    const t = setTimeout(() => setI((v) => (v + 1) % n), interval)
+    return () => clearTimeout(t)
+  }, [i, hold, inView, interval, n, reduce])
+
+  const go = (d: number) => setI((v) => (v + d + n) % n)
+
+  return (
+    <section ref={ref} className={cn("w-full bg-[#f6f4ef] px-6 py-20 md:px-10 md:py-24", className)}>
+      <div
+        className="mx-auto grid max-w-[1312px] items-center gap-12 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+        onPointerEnter={(e) => e.pointerType === "mouse" && setHold(true)}
+        onPointerLeave={() => setHold(false)}
+      >
+        <div className="flex flex-col gap-10">
+          <h2 className="max-w-[14ch] font-serif text-[clamp(34px,3.6vw,52px)] font-light leading-[1.08] tracking-[-0.015em] text-[#0b1424]">{title}</h2>
+
+          <div className="min-h-[96px] max-w-[40ch]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p
+                key={i}
+                className="text-[16px] leading-relaxed text-black/65"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.15 } }}
+                exit={{ opacity: 0, y: -6, transition: { duration: 0.2 } }}
+              >
+                {sectors[i].note}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-black/10 pt-5">
+            <span className="flex items-center gap-1.5 text-[15px] text-[#0b1424]">
+              <Counter value={i + 1} />
+              <span className="text-black/35">of {n}</span>
+            </span>
+            <div className="flex gap-2">
+              <button type="button" aria-label="Previous sector" onClick={() => go(-1)} className="grid size-10 place-items-center rounded-[10px] border border-black/12 bg-white text-[#0b1424]">
+                <ArrowLeft className="size-4" strokeWidth={1.6} />
+              </button>
+              <button type="button" aria-label="Next sector" onClick={() => go(1)} className="grid size-10 place-items-center rounded-[10px] bg-[#0b1424] text-white">
+                <ArrowRight className="size-4" strokeWidth={1.6} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* wheel */}
+        <div
+          className="relative h-[520px] overflow-hidden"
+          style={{ maskImage: "linear-gradient(180deg, transparent 0, #000 24%, #000 76%, transparent 100%)" }}
+        >
+          <div className="absolute inset-x-0 top-1/2" style={{ marginTop: -ROW / 2 }}>
+            {sectors.map((s, k) => {
+              let d = k - i
+              if (d > n / 2) d -= n
+              if (d < -n / 2) d += n
+              const a = Math.abs(d)
+              return (
+                <motion.button
+                  key={s.name}
+                  type="button"
+                  onClick={() => setI(k)}
+                  className="absolute left-0 flex w-full items-center whitespace-nowrap text-left font-serif text-[clamp(30px,3.4vw,46px)] font-light tracking-[-0.01em] text-[#0b1424]"
+                  style={{ height: ROW, transformOrigin: "left center" }}
+                  initial={false}
+                  animate={{
+                    y: d * ROW,
+                    opacity: a === 0 ? 1 : a === 1 ? 0.5 : a === 2 ? 0.22 : 0,
+                    scale: a === 0 ? 1 : 0.86,
+                    filter: a === 0 ? "blur(0px)" : `blur(${Math.min(a, 3) * 1.2}px)`,
+                  }}
+                  transition={a > 3 ? { duration: 0 } : { duration: 0.9, ease: [0.42, 0, 0, 1] }}
+                >
+                  {s.name}
+                </motion.button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default SectorWheel
+
+
+demo.tsx
+import { SectorWheel } from "@/components/ui/sector-wheel"
+
+const IMG = "https://cdn.jsdelivr.net/gh/rm-sjent/21st-assets@v1/img/"
+const sectors = [
+  { name: "Technology", note: "From seed-stage founders to listed software firms, we help tech teams hire and move people quickly." },
+  { name: "Hospitality", note: "Seasonal hiring, chef visas and new openings, planned around your launch dates." },
+  { name: "Healthcare", note: "Clinics and care groups recruiting specialists from abroad, with every check done properly." },
+  { name: "Finance", note: "Funds, banks and fintechs moving senior people between offices without delays." },
+  { name: "Education", note: "Schools and universities sponsoring staff and welcoming international students." },
+  { name: "Manufacturing", note: "Engineers and skilled trades, sponsored with the paperwork kept simple." },
+  { name: "Retail", note: "Store openings and head-office hires for brands growing into new markets." },
+  { name: "Media", note: "Producers, writers and on-screen talent working across borders." },
+  { name: "Energy", note: "Project teams for renewables and infrastructure, on tight timelines." },
+  { name: "Property", note: "Developers and agencies bringing in specialists for large projects." },
+  { name: "Agriculture", note: "Seasonal and permanent workers, sponsored with care for the details." },
+  { name: "Legal", note: "Firms relocating partners and associates between jurisdictions." },
+  { name: "Charities", note: "Non-profits sponsoring overseas staff on modest budgets." },
+]
+
+export default function SectorWheelDemo() {
+  return (
+    <div className="w-full bg-white" style={{ fontFamily: "Geist, ui-sans-serif, system-ui, sans-serif" }}>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..400&display=swap" precedence="default" />
+      <style>{`.font-serif{font-family:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif}`}</style>
+      <SectorWheel sectors={sectors} />
+    </div>
+  )
+}
+
+```
+
+Install NPM dependencies:
+```bash
+clsx, motion, lucide-react, tailwind-merge
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them
